@@ -1,0 +1,22 @@
+#page_header {
+    width: 50%; /* Ширина слоя в пикселах */
+    margin: auto; /* Отступ справа */
+    height: 50px;
+    text-align: center;
+
+    /*z-index: 120;*/
+    /*direction: ltr;*/
+}
+
+#page_layout {
+    width: 50%; /* Ширина слоя в пикселах */
+    margin: auto; /* Отступ справа */
+    overflow: auto; /* Добавление полосы прокрутки */
+}
+
+table {
+    width: 100%; /* Ширина слоя в пикселах */
+
+    /*z-index: 120;*/
+    /*direction: ltr;*/
+}

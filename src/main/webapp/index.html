@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Experiments</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="websocket.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+<div id="wrapper">
+    <h1>Java Websocket Home</h1>
+    <p>Welcome to the Java WebSocket Home. Click the Add a device button to start adding devices.</p>
+    <br/>
+    <input id="rock" type="button" value="Камень" onclick=clickBtn(this)>
+    <input id="scissors" type="button" value="Ножницы" onclick=clickBtn(this)>
+    <input id="paper" type="button" value="Бумага" onclick=clickBtn(this)>
+
+    <input id="message" type="text" placeholder="Enter message">
+    <input type="button" value="Send" onclick="sendMessage('user', document.getElementById('message').value)">
+</div>
+
+<div id="subscribe"></div>
+
+</body>
+</html>
