@@ -1,13 +1,13 @@
 package com.azamat.websocket;
 
+import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
-import java.time.LocalTime;
-import java.util.UUID;
 
 /**
  * Created by azamat on 11/30/16.
  */
 public class Player {
+    private String id;
     private String nick;
     //выбор игрока (камень, ножныцы или бумага)
     private String choice;
@@ -20,7 +20,9 @@ public class Player {
     public Player() {
     }
 
-    public Player(Session session) {
+    public Player(String id, Session session) {
+        this.id = id;
+        nick = session.getId();
         this.session = session;
     }
 
@@ -28,22 +30,25 @@ public class Player {
     //=               Methods                 =
     //=========================================
 
-//    public void sendMessage(Type type) {
-//        Message msg = new Message();
-//
-//        try {
-//            //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
-//            if (session.isOpen())
-//                session.getBasicRemote().sendObject(new Message(false, roomId));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+    public boolean isConnected() {
+        if (opponent != null && opponent.isActive())
+            return true;
+        return false;
+    }
+
+    public boolean isActive() {
+        return session.isOpen();
+    }
 
 
     //==========================================
     //=            Getter & Setter             =
     //==========================================
+
+
+    public String getId() {
+        return id;
+    }
 
     public int incrementAndGetScore() {
         return score++;
@@ -51,6 +56,14 @@ public class Player {
 
     public Player getOpponent() {
         return opponent;
+    }
+
+    public void setOpponent(Player opponent) {
+        this.opponent = opponent;
+    }
+
+    public RemoteEndpoint.Basic getSender() {
+        return session.getBasicRemote();
     }
 
     public int getScore() {
@@ -73,7 +86,6 @@ public class Player {
         this.choice = choice;
     }
 
-
     //=============================================
     //=        equals, hashcode, toString         =
     //=============================================
@@ -84,15 +96,24 @@ public class Player {
 
         Player player = (Player) o;
 
+        if (id != null ? !id.equals(player.id) : player.id != null) return false;
         if (nick != null ? !nick.equals(player.nick) : player.nick != null) return false;
-        return choice != null ? choice.equals(player.choice) : player.choice == null;
+        if (choice != null ? !choice.equals(player.choice) : player.choice != null) return false;
+        if (score != null ? !score.equals(player.score) : player.score != null) return false;
+        if (session != null ? !session.equals(player.session) : player.session != null) return false;
+        return opponent != null ? opponent.equals(player.opponent) : player.opponent == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = nick != null ? nick.hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (nick != null ? nick.hashCode() : 0);
         result = 31 * result + (choice != null ? choice.hashCode() : 0);
+        result = 31 * result + (score != null ? score.hashCode() : 0);
+        result = 31 * result + (session != null ? session.hashCode() : 0);
+        result = 31 * result + (opponent != null ? opponent.hashCode() : 0);
         return result;
     }
 }
+

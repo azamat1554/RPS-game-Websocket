@@ -30,11 +30,15 @@ public class MessageDecoder implements Decoder.Text<Message> {
                     msg.setType(Type.MESSAGE);
                     msg.setNick(jsonMessage.getString("nick"));
                     msg.setSendDate(LocalTime.now());
-                    msg.setMessage(jsonMessage.getString("message"));;
+                    msg.setMessage(jsonMessage.getString("message"));
                     break;
                 case RESULT:
                     msg.setType(Type.RESULT);
                     msg.setChoice(PlayerChoice.valueOf(jsonMessage.getString("choice")));
+                    break;
+                case CONNECTION:
+                    msg.setType(Type.CONNECTION);
+                    msg.setConnection(jsonMessage.getBoolean("connection"));
             }
 
             return msg;

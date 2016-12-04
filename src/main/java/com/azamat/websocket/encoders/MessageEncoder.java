@@ -1,4 +1,7 @@
-package com.azamat.websocket;
+package com.azamat.websocket.encoders;
+
+import com.azamat.websocket.Message;
+import com.azamat.websocket.Type;
 
 import javax.json.Json;
 import javax.json.JsonObject;

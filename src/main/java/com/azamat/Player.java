@@ -7,7 +7,7 @@ import javax.validation.constraints.Size;
 import java.util.Date;
 
 /**
- * Класс сущности Player
+ * Класс сущности PlayerHandler
  */
 
 @Entity
@@ -18,6 +18,8 @@ public class Player {
     @NotNull  @Size(min = 5, max = 50)
     @Pattern(regexp = "[a-zA-Z0-9]*")
     private String nickName;
+
+    private String password;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date creationDate;
@@ -64,6 +66,14 @@ public class Player {
 
     public void setNickName(String nickName) {
         this.nickName = nickName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public Date getCreationDate() {

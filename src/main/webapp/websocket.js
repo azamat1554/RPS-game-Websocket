@@ -6,7 +6,6 @@ function init() {
     rock = document.getElementById('rock');
     paper = document.getElementById('paper');
     scissors = document.getElementById('scissors');
-    buttonsDisable(true);
 
     var url = "ws://" + location.host + "/RPS_Game_1.0/game/" + location.hash.replace('#', '');
     socket = new WebSocket(url);
@@ -14,6 +13,8 @@ function init() {
     socket.onclose = onClose;
     socket.onerror = onError;
     socket.onmessage = onMessage;
+
+    buttonsDisable(true);
 }
 
 function onOpen() {
@@ -40,7 +41,9 @@ function onMessage(event) {
             showResult(incomingMessage);
             break;
         case 'CONNECTION':
-            showMessage(incomingMessage)
+            showMessage(incomingMessage);
+            break;
+        case 'ID':
             window.location.hash = incomingMessage.id;
     }
     //кнопки не должны разблокироваться, когда приходит сообщение

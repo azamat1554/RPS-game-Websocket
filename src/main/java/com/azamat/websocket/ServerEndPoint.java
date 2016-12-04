@@ -1,9 +1,17 @@
 package com.azamat.websocket;
 
+import com.azamat.websocket.encoders.MessageEncoder;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.io.StringReader;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -12,21 +20,23 @@ import java.util.logging.Logger;
 /**
  * Created by azamat on 11/28/16.
  */
-//// TODO: 12/3/16 Сделать roomId глобальной переменной, в классе Room внедрить Player
+//// TODO: 12/3/16 Сделать roomId глобальной переменной, в классе Room внедрить PlayerHandler
 //чтобы избавиться от session.
 
 //Создается новый экземпляр класса при каждом соединении
+@ApplicationScoped
 @ServerEndpoint(
-        value = "/game/{room}",
-        encoders = MessageEncoder.class,
-        decoders = MessageDecoder.class
+        value = "/game/{room}"
+//        encoders = MessageEncoder.class,
+//        decoders = MessageDecoder.class
 )
 public class ServerEndPoint {
     private static final Map<String, Room> rooms = new ConcurrentHashMap<>();
+
+    //хранит игроков, которые ожидают подключения соперника
     private static final Map<String, Player> players = new ConcurrentHashMap<>();
 
     private String roomId;
-    private Session session;
     private Player player;
 
     private static final Logger logger = Logger.getLogger(ServerEndPoint.class.getName());
@@ -35,27 +45,48 @@ public class ServerEndPoint {
     public void onOpen(Session session, @PathParam("room") String roomId) {
         logger.log(Level.INFO, "поиск @OnOpen" + roomId);
 
-        this.session = session;
+//        this.session = session;
+//        try {
+//            //если только зашел на сайт и нет uuid, или если зашел под неизвестным uuid,
+//            // тогда сгенерировать новый uuid и создать новую комнату
+//            if (!rooms.containsKey(roomId) || (rooms.get(roomId).size() == 2)) {
+//                roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
+//                this.roomId = roomId;
+//                rooms.put(roomId, new Room(roomId, session));
+//
+//                //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
+//                if (session.isOpen())
+//                    session.getBasicRemote().sendObject(new Message(false, roomId));
+//            } else if (rooms.get(roomId).size() < 2) {
+//                this.roomId = roomId;
+//                rooms.get(roomId).addPlayer(roomId, session);
+//
+//                if (session.isOpen())
+//                    session.getBasicRemote().sendObject(new Message(true, roomId));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
         try {
-            //если только зашел на сайт и нет uuid, или если зашел под неизвестным uuid,
+            //если только зашел на сайт и нет id, или если зашел под неизвестным uuid,
             // тогда сгенерировать новый uuid и создать новую комнату
-            if (!rooms.containsKey(roomId) || (rooms.get(roomId).size() == 2)) {
-                roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
-                this.roomId = roomId;
-                rooms.put(roomId, new Room(roomId, session));
-
-
-                player = new Player(session);
+            if (!players.containsKey(roomId) || players.get(roomId).isConnected()) {
+                this.roomId = roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
+                player = new Player(roomId, session);
+                players.put(player.getId(), player);
 
                 //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
-                if (session.isOpen())
-                    session.getBasicRemote().sendObject(new Message(false, roomId));
-            } else if (rooms.get(roomId).size() < 2) {
+                PlayerHandler.sendIdMessage(player);
+            } else {
                 this.roomId = roomId;
-                rooms.get(roomId).addPlayer(roomId, session);
+                player = new Player(roomId, session);
+                player.setOpponent(players.get(roomId));
+                players.get(roomId).setOpponent(player);
 
-                if (session.isOpen())
-                    session.getBasicRemote().sendObject(new Message(true, roomId));
+                PlayerHandler.sendConnectionMessage(player);
+                if (player.isConnected())
+                    PlayerHandler.sendConnectionMessage(player.getOpponent());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,12 +97,20 @@ public class ServerEndPoint {
     public void close() {
         logger.log(Level.SEVERE, "@OnClose" + roomId);
 
-//        String roomId = (String) session.getUserProperties().get("roomId");
+        if (player.isConnected()) {
+            players.put(roomId, player.getOpponent());
+            //удаляет ссылку на себя у оппонента
+            player.getOpponent().setOpponent(null);
+        } else {
+            players.remove(roomId);
+        }
 
-        if (rooms.get(roomId).size() == 1)
-            rooms.remove(roomId);
-        else if (rooms.get(roomId).size() == 2)
-            rooms.get(roomId).remove(session);
+        PlayerHandler.sendConnectionMessage(player.getOpponent());
+
+//        if (rooms.get(roomId).size() == 1)
+//            rooms.remove(roomId);
+//        else if (rooms.get(roomId).size() == 2)
+//            rooms.get(roomId).remove(session);
     }
 
     @OnError
@@ -80,81 +119,72 @@ public class ServerEndPoint {
     }
 
     @OnMessage
-    public void onMessage(Message message) {
+    public void onMessage(String message) {
         logger.log(Level.SEVERE, "@OnMessage" + roomId);
 //        logger.log(Level.SEVERE, message.toString());
 
-//        String roomId = (String) session.getUserProperties().get("roomId");
-        if (message.getType() == Type.MESSAGE) {
-            sendMessage(session, message);
-        } else {
-            session.getUserProperties().put("choice", message.getChoice());
+        try (JsonReader reader = Json.createReader(new StringReader(message))) {
+            JsonObject jsonMessage = reader.readObject();
 
-            if (rooms.get(roomId).Player_1().getUserProperties().get("choice") != null
-                    & rooms.get(roomId).Player_2().getUserProperties().get("choice") != null) {
+            switch (Type.valueOf(jsonMessage.getString("type"))) {
+                case MESSAGE:
+//                    msg.setType(Type.MESSAGE);
+//                    msg.setNick(jsonMessage.getString("nick"));
+//                    msg.setSendDate(LocalTime.now());
+//                    msg.setMessage(jsonMessage.getString("message"));
+                    PlayerHandler.sendChatMessage(player.getOpponent(), jsonMessage.getString("message"));
+                    break;
+                case RESULT:
+//                    msg.setType(Type.RESULT);
+//                    msg.setChoice(PlayerChoice.valueOf(jsonMessage.getString("choice")));
+                    player.setChoice(jsonMessage.getString("choice"));
 
-                play(roomId);
+                    if (player.getChoice() != null & player.getOpponent().getChoice() != null)
+                        play();
+//                        PlayerHandler.play(player);
+//                    PlayerHandler.sendResultMessage(player, jsonMessage.getString("result"), jsonMessage.getString("choice"));
+//                    PlayerHandler.sendResultMessage(player, jsonMessage.getString("result"), jsonMessage.getString("choice"));
             }
         }
 
+//        if (message.getType() == Type.MESSAGE) {
+//            PlayerHandler.sendChatMessage();
+//            sendMessage(session, message);
+//        } else {
+//            session.getUserProperties().put("choice", message.getChoice());
+//
+//            if (rooms.get(roomId).Player_1().getUserProperties().get("choice") != null
+//                    & rooms.get(roomId).Player_2().getUserProperties().get("choice") != null) {
+//
+//                play(roomId);
+//            }
+//        }
     }
 
-    private void play(String roomId) {
-        PlayerChoice player1, player2;
+    private void play() {
+        PlayerChoice choice = PlayerChoice.valueOf(player.getChoice());
+        PlayerChoice opponentChoice = PlayerChoice.valueOf(player.getOpponent().getChoice());
 
-        player1 = (PlayerChoice) rooms.get(roomId).Player_1().getUserProperties().get("choice");
-        player2 = (PlayerChoice) rooms.get(roomId).Player_2().getUserProperties().get("choice");
-
-        if (player1 == player2) {
-            sendResult(roomId, Result.DRAW, Result.DRAW);
-        } else if ((player1 == PlayerChoice.ROCK & player2 == PlayerChoice.SCISSORS) ||
-                (player1 == PlayerChoice.PAPER & player2 == PlayerChoice.ROCK) ||
-                (player1 == PlayerChoice.SCISSORS & player2 == PlayerChoice.PAPER)) {
-            sendResult(roomId, Result.WIN, Result.LOSE);
+        if (choice == opponentChoice) {
+//            sendResult(roomId, Result.DRAW, Result.DRAW);
+            PlayerHandler.sendResultMessage(player, Result.DRAW, opponentChoice);
+            PlayerHandler.sendResultMessage(player.getOpponent(), Result.DRAW, choice);
+        } else if ((choice == PlayerChoice.ROCK & opponentChoice == PlayerChoice.SCISSORS) ||
+                (choice == PlayerChoice.PAPER & opponentChoice == PlayerChoice.ROCK) ||
+                (choice == PlayerChoice.SCISSORS & opponentChoice == PlayerChoice.PAPER)) {
+//            sendResult(roomId, Result.WIN, Result.LOSE);
+            PlayerHandler.sendResultMessage(player, Result.WIN, opponentChoice);
+            PlayerHandler.sendResultMessage(player.getOpponent(), Result.LOSE, choice);
         } else {
-
-            sendResult(roomId, Result.LOSE, Result.WIN);
+            PlayerHandler.sendResultMessage(player, Result.LOSE, opponentChoice);
+            PlayerHandler.sendResultMessage(player.getOpponent(), Result.WIN, choice);
+//            sendResult(roomId, Result.LOSE, Result.WIN);
         }
 
-        rooms.get(roomId).Player_1().getUserProperties().put("choice", null);
-        rooms.get(roomId).Player_2().getUserProperties().put("choice", null);
-    }
+//        rooms.get(roomId).Player_1().getUserProperties().put("choice", null);
+//        rooms.get(roomId).Player_2().getUserProperties().put("choice", null);
 
-    private void sendResult(String roomId, Result player1, Result player2) {
-        try {
-            rooms.get(roomId).Player_1().getBasicRemote().sendObject(createMessage(rooms.get(roomId).Player_1(), player1));
-            rooms.get(roomId).Player_2().getBasicRemote().sendObject(createMessage(rooms.get(roomId).Player_2(), player2));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (EncodeException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Message createMessage(Session player, Result result) {
-        //// TODO: 12/3/16 Впринципе, можно сохранить ссылку на оппонента в Session (Player)
-        String roomId = (String) player.getUserProperties().get("roomId");
-        Session anotherPlayer = rooms.get(roomId).getAnotherPlayer(player);
-
-        Message message = new Message(result);
-        message.setChoice((PlayerChoice) anotherPlayer.getUserProperties().get("choice"));
-
-        if (result == Result.WIN) {
-            int score = (int) player.getUserProperties().get("score");
-            player.getUserProperties().put("score", ++score);
-        }
-        message.setScore((int) player.getUserProperties().get("score"));
-
-        logger.log(Level.INFO, "сообщение " + message);
-        return message;
-    }
-
-    private void sendMessage(Session sender, Message message) {
-        logger.log(Level.INFO, "сообщение " + message);
-        try {
-            rooms.get(roomId).getAnotherPlayer(sender).getBasicRemote().sendObject(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        player.setChoice(null);
+        player.getOpponent().setChoice(null);
     }
 }
