@@ -1,6 +1,5 @@
 package com.azamat.websocket;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
@@ -9,7 +8,8 @@ import java.time.LocalTime;
 public class Message {
     //тип пакета, определяет содержимое объекта (сообщение, результаты, идентификатор)
     private Type type;
-    private String roomId;
+    private String id;
+    private Boolean connection;
     //выбор игрока (камень, ножныцы или бумага)
     private PlayerChoice choice;
     //результат игры (победа, ничья, поражение)
@@ -24,9 +24,10 @@ public class Message {
 
     }
 
-    public Message(String roomId) {
-        type = Type.ID;
-        this.roomId = roomId;
+    public Message(Boolean connection, String id) {
+        type = Type.CONNECTION;
+        this.connection = connection;
+        this.id = id;
     }
 
     public Message(Result result) {
@@ -52,12 +53,20 @@ public class Message {
         this.type = type;
     }
 
-    public String getRoomId() {
-        return roomId;
+    public String getId() {
+        return id;
     }
 
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Boolean isConnected() {
+        return connection;
+    }
+
+    public void setConnection(Boolean connection) {
+        this.connection = connection;
     }
 
     public Integer getScore() {
@@ -115,7 +124,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "type=" + type +
-                ", roomId='" + roomId + '\'' +
+                ", id='" + id + '\'' +
                 ", choice=" + choice +
                 ", result=" + result +
                 ", score=" + score +

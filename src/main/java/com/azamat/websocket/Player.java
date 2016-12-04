@@ -1,6 +1,8 @@
 package com.azamat.websocket;
 
 import javax.websocket.Session;
+import java.time.LocalTime;
+import java.util.UUID;
 
 /**
  * Created by azamat on 11/30/16.
@@ -13,6 +15,7 @@ public class Player {
     private Integer score = 0;
 
     private Session session;
+    private Player opponent;
 
     public Player() {
     }
@@ -21,8 +24,33 @@ public class Player {
         this.session = session;
     }
 
+    //=========================================
+    //=               Methods                 =
+    //=========================================
+
+//    public void sendMessage(Type type) {
+//        Message msg = new Message();
+//
+//        try {
+//            //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
+//            if (session.isOpen())
+//                session.getBasicRemote().sendObject(new Message(false, roomId));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
+    //==========================================
+    //=            Getter & Setter             =
+    //==========================================
+
     public int incrementAndGetScore() {
         return score++;
+    }
+
+    public Player getOpponent() {
+        return opponent;
     }
 
     public int getScore() {
@@ -45,6 +73,10 @@ public class Player {
         this.choice = choice;
     }
 
+
+    //=============================================
+    //=        equals, hashcode, toString         =
+    //=============================================
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

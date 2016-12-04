@@ -23,6 +23,11 @@ import java.util.logging.Logger;
 )
 public class ServerEndPoint {
     private static final Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private static final Map<String, Player> players = new ConcurrentHashMap<>();
+
+    private String roomId;
+    private Session session;
+    private Player player;
 
     private static final Logger logger = Logger.getLogger(ServerEndPoint.class.getName());
 
@@ -30,31 +35,38 @@ public class ServerEndPoint {
     public void onOpen(Session session, @PathParam("room") String roomId) {
         logger.log(Level.INFO, "поиск @OnOpen" + roomId);
 
-        //если только зашел на сайт и нет uuid, или если зашел под неизвестным uuid,
-        // тогда сгенерировать новый uuid и создать новую комнату
-        if (!rooms.containsKey(roomId) || (rooms.get(roomId).size() == 2)) {
-            //// TODO: 12/3/16 возможно имеет смысл сделать roomId глобальной переменной
-            roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
-            rooms.put(roomId, new Room(roomId, session));
+        this.session = session;
+        try {
+            //если только зашел на сайт и нет uuid, или если зашел под неизвестным uuid,
+            // тогда сгенерировать новый uuid и создать новую комнату
+            if (!rooms.containsKey(roomId) || (rooms.get(roomId).size() == 2)) {
+                roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
+                this.roomId = roomId;
+                rooms.put(roomId, new Room(roomId, session));
 
-            try {
-                if (session.isOpen()) {
-                    session.getBasicRemote().sendObject(new Message(roomId));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+
+                player = new Player(session);
+
+                //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
+                if (session.isOpen())
+                    session.getBasicRemote().sendObject(new Message(false, roomId));
+            } else if (rooms.get(roomId).size() < 2) {
+                this.roomId = roomId;
+                rooms.get(roomId).addPlayer(roomId, session);
+
+                if (session.isOpen())
+                    session.getBasicRemote().sendObject(new Message(true, roomId));
             }
-        } else if (rooms.get(roomId).size() < 2) {
-
-            rooms.get(roomId).addPlayer(roomId, session);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @OnClose
-    public void close(Session session) {
-        logger.log(Level.SEVERE, "@OnClose");
+    public void close() {
+        logger.log(Level.SEVERE, "@OnClose" + roomId);
 
-        String roomId = (String) session.getUserProperties().get("roomId");
+//        String roomId = (String) session.getUserProperties().get("roomId");
 
         if (rooms.get(roomId).size() == 1)
             rooms.remove(roomId);
@@ -68,11 +80,11 @@ public class ServerEndPoint {
     }
 
     @OnMessage
-    public void onMessage(Message message, Session session) {
-//        logger.log(Level.SEVERE, "@OnMessage");
+    public void onMessage(Message message) {
+        logger.log(Level.SEVERE, "@OnMessage" + roomId);
 //        logger.log(Level.SEVERE, message.toString());
 
-        String roomId = (String) session.getUserProperties().get("roomId");
+//        String roomId = (String) session.getUserProperties().get("roomId");
         if (message.getType() == Type.MESSAGE) {
             sendMessage(session, message);
         } else {
@@ -138,7 +150,6 @@ public class ServerEndPoint {
     }
 
     private void sendMessage(Session sender, Message message) {
-        String roomId = (String) sender.getUserProperties().get("roomId");
         logger.log(Level.INFO, "сообщение " + message);
         try {
             rooms.get(roomId).getAnotherPlayer(sender).getBasicRemote().sendObject(message);

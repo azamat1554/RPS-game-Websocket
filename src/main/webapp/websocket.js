@@ -6,6 +6,7 @@ function init() {
     rock = document.getElementById('rock');
     paper = document.getElementById('paper');
     scissors = document.getElementById('scissors');
+    buttonsDisable(true);
 
     var url = "ws://" + location.host + "/RPS_Game_1.0/game/" + location.hash.replace('#', '');
     socket = new WebSocket(url);
@@ -38,10 +39,12 @@ function onMessage(event) {
         case 'RESULT':
             showResult(incomingMessage);
             break;
-        case 'ID':
-            window.location.hash = incomingMessage.roomId;
+        case 'CONNECTION':
+            showMessage(incomingMessage)
+            window.location.hash = incomingMessage.id;
     }
-
+    //кнопки не должны разблокироваться, когда приходит сообщение
+    // alert("этот код не должен выполняться");
     buttonsDisable(false);
 }
 

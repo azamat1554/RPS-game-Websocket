@@ -28,10 +28,11 @@ public class MessageEncoder implements Encoder.Text<Message>{
                         .add("result", message.getResult().toString())
                         .add("choice", message.getChoice().toString())
                         .add("score", message.getScore()).build().toString();
-            case ID:
+            case CONNECTION:
                 return Json.createObjectBuilder()
-                        .add("type", Type.ID.toString())
-                        .add("roomId", message.getRoomId()).build().toString();
+                        .add("type", Type.CONNECTION.toString())
+                        .add("connection", message.isConnected())
+                        .add("id", message.getId()).build().toString();
         }
 
         return null;

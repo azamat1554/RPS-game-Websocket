@@ -33,7 +33,6 @@ public class Room {
         if (players.size() == 2)
             return false;
 
-//        session.getUserProperties().put("playerId", players.size() + 1);
         session.getUserProperties().put("roomId", roomId);
         session.getUserProperties().put("score", 0);
         players.add(session);
