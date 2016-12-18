@@ -1,0 +1,43 @@
+.score {
+    font-size: medium;
+}
+
+.container {
+    max-width: 750px;
+}
+
+.fixed-panel {
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: scroll;
+}
+
+.circle-icon {
+    text-align: center;
+    vertical-align: middle;
+    line-height: 64px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50px;
+}
+
+.your-message {
+    background-color: #67b168;
+    float: right;
+}
+
+.opp-message {
+    background-color: #46b8da;
+}
+
+.message-style {
+    border-radius: 4px;
+    padding: 5px;
+    max-width: 95%;
+    display: inline-block;
+    overflow: visible;
+}
+
+.media {
+    margin-top: 10px;
+}

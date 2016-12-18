@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 )
 public class ServerEndPoint {
     //хранит игроков, которые ожидают подключения соперника
-    private static final Map<String, Player> players = new ConcurrentHashMap<>();
+    private static final Map<String, Player> idlePlayers = new ConcurrentHashMap<>();
 
     private String roomId;
     private Player player;
@@ -39,18 +39,18 @@ public class ServerEndPoint {
         try {
             //если только зашел на сайт и нет id, или если зашел под неизвестным uuid,
             // тогда сгенерировать новый uuid и создать новую комнату
-            if (!players.containsKey(roomId) || players.get(roomId).isConnected()) {
+            if (!idlePlayers.containsKey(roomId) || idlePlayers.get(roomId).isConnected()) {
                 this.roomId = roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
                 player = new Player(roomId, session);
-                players.put(player.getId(), player);
+                idlePlayers.put(player.getId(), player);
 
                 //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
                 PlayerHandler.sendIdMessage(player);
             } else {
                 this.roomId = roomId;
                 player = new Player(roomId, session);
-                player.setOpponent(players.get(roomId));
-                players.get(roomId).setOpponent(player);
+                player.setOpponent(idlePlayers.get(roomId));
+                idlePlayers.get(roomId).setOpponent(player);
 
                 PlayerHandler.sendConnectionMessage(player);
                 if (player.isConnected())
@@ -66,11 +66,11 @@ public class ServerEndPoint {
         logger.log(Level.SEVERE, "@OnClose" + roomId);
 
         if (player.isConnected()) {
-            players.put(roomId, player.getOpponent());
+            idlePlayers.put(roomId, player.getOpponent());
             //удаляет ссылку на себя у оппонента
             player.getOpponent().setOpponent(null);
         } else {
-            players.remove(roomId);
+            idlePlayers.remove(roomId);
         }
 
         PlayerHandler.sendConnectionMessage(player.getOpponent());
@@ -109,6 +109,8 @@ public class ServerEndPoint {
         if (choice == opponentChoice) {
             PlayerHandler.sendResultMessage(player, Result.DRAW, opponentChoice);
             PlayerHandler.sendResultMessage(player.getOpponent(), Result.DRAW, choice);
+
+            //// TODO: 12/6/16 Можно вынести в отдельный метод
         } else if ((choice == PlayerChoice.ROCK & opponentChoice == PlayerChoice.SCISSORS) ||
                 (choice == PlayerChoice.PAPER & opponentChoice == PlayerChoice.ROCK) ||
                 (choice == PlayerChoice.SCISSORS & opponentChoice == PlayerChoice.PAPER)) {

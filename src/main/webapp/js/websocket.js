@@ -9,7 +9,7 @@ function init() {
 
     var url = "ws://" + location.host + "/RPS_Game_1.0/game/" + location.hash.replace('#', '');
     socket = new WebSocket(url);
-    socket.onopen = onOpen();
+    socket.onopen = onOpen;
     socket.onclose = onClose;
     socket.onerror = onError;
     socket.onmessage = onMessage;
@@ -18,16 +18,16 @@ function init() {
 }
 
 function onOpen() {
-    // alert("Соединение установлено.");
+    console.log("Соединение установлено.");
 };
 
 function onClose(event) {
     if (event.wasClean) {
-        alert('Соединение закрыто чисто');
+        console.log('Соединение закрыто чисто');
     } else {
-        alert('Обрыв соединения'); // например, "убит" процесс сервера
+        console.log('Обрыв + соединения'); // например, "убит" процесс сервера
     }
-    alert('Код: ' + event.code + ' причина: ' + event.reason);
+    console.log('Код: ' + event.code + ' причина: ' + event.reason);
 }
 
 //метод который вызывается, когда приходят сообщения
@@ -46,8 +46,6 @@ function onMessage(event) {
         case 'ID':
             window.location.hash = incomingMessage.id;
     }
-    //кнопки не должны разблокироваться, когда приходит сообщение
-    // alert("этот код не должен выполняться");
     buttonsDisable(false);
 }
 
@@ -72,13 +70,27 @@ function showResult(message) {
 
 
 function onError(error) {
-    alert("Ошибка " + error.message);
+    console.log("Ошибка " + error.message);
 };
 
 function clickSend() {
-    document.getElementById('message').value;
-    sendMessage("user", form.elements.message.value);
+    var message = document.getElementById('message').value;
+    if (!message) return;
+    document.getElementById('message').value = "";
 
+    var messageElem = document.createElement('div');
+    messageElem.classList.add('message-style');
+    messageElem.classList.add('your-message');
+    messageElem.appendChild(document.createTextNode(message));
+
+    var parentElem = document.createElement('div');
+    parentElem.classList.add('media');
+    parentElem.appendChild(messageElem);
+
+    var block = document.getElementById('message-body')
+    block.appendChild(parentElem);
+    block.scrollTop = block.scrollHeight; //чтобы прокручивалось в конец
+    // sendMessage("user", form.elements.message.value);
 }
 
 function sendMessage(nick, message) {
@@ -116,4 +128,12 @@ function clickBtn(obj) {
     }
 
     sendResult(choice);
-}
+};
+
+document.forms[0].onsubmit = function() {
+    var value = this.elements.message.value;
+    if (value == '') return false; // игнорировать пустой submit
+
+    clickSend();
+    return false;
+};

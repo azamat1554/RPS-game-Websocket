@@ -1,26 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-    <title>Experiments</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <script src="websocket.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Bootstrap 101 Template</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet"/>
 </head>
 <body>
+<div class="container">
+    <div class="page-header text-center">
+        <h1>ROCK PAPER SCISSORS</h1>
+    </div>
+    <!--<header>ROCK PAPER SCISSORS</header>-->
 
-<div id="wrapper">
-    <h1>Java Websocket Home</h1>
-    <p>Welcome to the Java WebSocket Home. Click the Add a device button to start adding devices.</p>
-    <br/>
-    <input id="rock" type="button" value="Камень" onclick=clickBtn(this)>
-    <input id="scissors" type="button" value="Ножницы" onclick=clickBtn(this)>
-    <input id="paper" type="button" value="Бумага" onclick=clickBtn(this)>
+    <div class="row text-center">
+        <div class="score">
+            <div class="col-md-4">Ваш</br><span id="your_score">1</span></div>
+            <div class="col-md-4">СЧЕТ</div>
+            <div class="col-md-4">Соперника</br><span id="opp_score">2</span></div>
+        </div>
+    </div>
 
-    <input id="message" type="text" placeholder="Enter message">
-    <input type="button" value="Send" onclick="sendMessage('user', document.getElementById('message').value)">
+    <div id="select-pane" class="row text-center">
+        Выберите картинку</br>
+        <div class="col-md-4">
+            <button class="btn btn-default">
+                <img src="images/rock.png" class="img-responsive center-block" width="140" height="140">
+            </button>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-default">
+                <img src="images/paper.png" class="img-responsive center-block" width="140" height="140">
+            </button>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-default">
+                <img src="images/scissors.png" class="img-responsive center-block" width="140" height="140">
+            </button>
+        </div>
+    </div>
+
+
+    <div class="panel panel-default" style="margin-top: 50px">
+        <div class="panel-heading">CHAT</div>
+        <div id="message-body" class="panel-body fixed-panel">
+            <div class="media">
+                <div class="message-style opp-message">
+                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
+                    condimentum massa.
+                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
+                    condimentum massa.
+                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
+                    condimentum massa.
+                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
+                    condimentum massa.
+                </div>
+            </div>
+
+            <div class="media">
+                <div class="message-style your-message">
+                    Donec sit amet ligula enim. Duis vel condimentum massa.
+                </div>
+            </div>
+        </div>
+
+        <form id="message-form">
+            <div class="panel-footer">
+                <div class="input-group">
+                    <input id="message" type="text" class="form-control" placeholder="Enter Message"/>
+                    <span class="input-group-btn">
+                    <button class="btn btn-success" type="submit">SEND</button>
+                </span>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-
-<div id="subscribe"></div>
-
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.js"></script>
+<script src="js/websocket.js"></script>
 </body>
 </html>
