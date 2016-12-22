@@ -49,14 +49,14 @@ public final class PlayerHandler {
 
     public static void sendChatMessage(Player player, String msg) {
         try {
-            String message = Json.createObjectBuilder()
-                    .add("type", Type.MESSAGE.toString())
-                    .add("nick", player.getNick())
-//                    .add("sendDate", player.getSendDate.toString())
-                    .add("message", msg).build().toString();
+//            String message = Json.createObjectBuilder()
+//                    .add("type", Type.MESSAGE.toString())
+//                    //.add("nick", player.getNick())
+////                    .add("sendDate", player.getSendDate.toString())
+//                    .add("message", msg).build().toString();
 
             if (player.isActive())
-                player.getSender().sendText(message);
+                player.getSender().sendText(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }

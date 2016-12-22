@@ -91,7 +91,8 @@ public class ServerEndPoint {
 
             switch (Type.valueOf(jsonMessage.getString("type"))) {
                 case MESSAGE:
-                    PlayerHandler.sendChatMessage(player.getOpponent(), jsonMessage.getString("message"));
+                    PlayerHandler.sendChatMessage(player.getOpponent(), message);
+                    //PlayerHandler.sendChatMessage(player.getOpponent(), jsonMessage.getString("message"));
                     break;
                 case RESULT:
                     player.setChoice(jsonMessage.getString("choice"));

@@ -12,73 +12,58 @@
     <link href="css/style.css" rel="stylesheet"/>
 </head>
 <body>
-<div class="container">
-    <div class="page-header text-center">
-        <h1>ROCK PAPER SCISSORS</h1>
-    </div>
-    <!--<header>ROCK PAPER SCISSORS</header>-->
-
-    <div class="row text-center">
-        <div class="score">
-            <div class="col-md-4">Ваш</br><span id="your_score">1</span></div>
-            <div class="col-md-4">СЧЕТ</div>
-            <div class="col-md-4">Соперника</br><span id="opp_score">2</span></div>
+<div class="center-block">
+    <div class="container">
+        <div class="page-header text-center">
+            <h1>ROCK PAPER SCISSORS</h1>
         </div>
-    </div>
+        <!--<header>ROCK PAPER SCISSORS</header>-->
 
-    <div id="select-pane" class="row text-center">
-        Выберите картинку</br>
-        <div class="col-md-4">
-            <button class="btn btn-default">
-                <img src="images/rock.png" class="img-responsive center-block" width="140" height="140">
-            </button>
-        </div>
-        <div class="col-md-4">
-            <button class="btn btn-default">
-                <img src="images/paper.png" class="img-responsive center-block" width="140" height="140">
-            </button>
-        </div>
-        <div class="col-md-4">
-            <button class="btn btn-default">
-                <img src="images/scissors.png" class="img-responsive center-block" width="140" height="140">
-            </button>
-        </div>
-    </div>
-
-
-    <div class="panel panel-default" style="margin-top: 50px">
-        <div class="panel-heading">CHAT</div>
-        <div id="message-body" class="panel-body fixed-panel">
-            <div class="media">
-                <div class="message-style opp-message">
-                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
-                    condimentum massa.
-                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
-                    condimentum massa.
-                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
-                    condimentum massa.
-                    Donec sit amet ligula enim. Duis vel condimentum massa.Donec sit amet ligula enim. Duis vel
-                    condimentum massa.
-                </div>
+        <div class="row text-center">
+            <div class="score">
+                <div class="col-xs-4">Your</br><span id="your_score">1</span></div>
+                <div class="col-xs-4">SCORE</div>
+                <div class="col-xs-4">Opponent</br><span id="opp_score">2</span></div>
             </div>
+        </div>
 
-            <div class="media">
-                <div class="message-style your-message">
-                    Donec sit amet ligula enim. Duis vel condimentum massa.
+        <div>
+            <div id="select-pane" class="row text-center">
+                Click the picture</br>
+                <div class="col-xs-4">
+                    <button class="btn btn-default" style="float: right" data-rock>
+                        <img src="images/rock.png" class="img-responsive" width="120">
+                    </button>
+                </div>
+                <div class="col-xs-4">
+                    <button class="btn btn-default" data-paper>
+                        <img src="images/paper.png" class="img-responsive " width="120">
+                    </button>
+                </div>
+                <div class="col-xs-4">
+                    <button class="btn btn-default" style="float: left" data-scissors>
+                        <img src="images/scissors.png" class="img-responsive" width="120">
+                    </button>
                 </div>
             </div>
         </div>
 
-        <form id="message-form">
-            <div class="panel-footer">
-                <div class="input-group">
-                    <input id="message" type="text" class="form-control" placeholder="Enter Message"/>
-                    <span class="input-group-btn">
-                    <button class="btn btn-success" type="submit">SEND</button>
-                </span>
+
+        <div class="panel panel-default" style="margin-top: 50px">
+            <div class="panel-heading">CHAT</div>
+            <div id="message-body" class="panel-body chat-panel"></div>
+
+            <form id="message-form">
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="message" type="text" class="form-control" placeholder="Enter Message"/>
+                        <span class="input-group-btn">
+                            <button class="btn btn-success" type="submit">SEND</button>
+                        </span>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
