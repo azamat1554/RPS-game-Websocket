@@ -40,6 +40,10 @@ public class Player {
         return session.isOpen();
     }
 
+    public int incrementScore() {
+        return score++;
+    }
+
 
     //==========================================
     //=            Getter & Setter             =

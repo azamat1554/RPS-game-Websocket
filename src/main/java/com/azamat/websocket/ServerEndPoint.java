@@ -44,7 +44,6 @@ public class ServerEndPoint {
                 player = new Player(roomId, session);
                 idlePlayers.put(player.getId(), player);
 
-                //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
                 PlayerHandler.sendIdMessage(player);
             } else {
                 this.roomId = roomId;
@@ -52,6 +51,7 @@ public class ServerEndPoint {
                 player.setOpponent(idlePlayers.get(roomId));
                 idlePlayers.get(roomId).setOpponent(player);
 
+                //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
                 PlayerHandler.sendConnectionMessage(player);
                 if (player.isConnected())
                     PlayerHandler.sendConnectionMessage(player.getOpponent());
@@ -97,6 +97,7 @@ public class ServerEndPoint {
                 case RESULT:
                     player.setChoice(jsonMessage.getString("choice"));
 
+                    //// TODO: 12/28/16 Возможно, первая проверка лишняя
                     if (player.getChoice() != null & player.getOpponent().getChoice() != null)
                         play();
             }
@@ -115,9 +116,11 @@ public class ServerEndPoint {
         } else if ((choice == PlayerChoice.ROCK & opponentChoice == PlayerChoice.SCISSORS) ||
                 (choice == PlayerChoice.PAPER & opponentChoice == PlayerChoice.ROCK) ||
                 (choice == PlayerChoice.SCISSORS & opponentChoice == PlayerChoice.PAPER)) {
+            player.incrementScore();
             PlayerHandler.sendResultMessage(player, Result.WIN, opponentChoice);
             PlayerHandler.sendResultMessage(player.getOpponent(), Result.LOSE, choice);
         } else {
+            player.getOpponent().incrementScore();
             PlayerHandler.sendResultMessage(player, Result.LOSE, opponentChoice);
             PlayerHandler.sendResultMessage(player.getOpponent(), Result.WIN, choice);
         }

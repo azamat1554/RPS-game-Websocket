@@ -32,13 +32,14 @@ public final class PlayerHandler {
         }
     }
 
-    public static void sendResultMessage(Player player, Result result, PlayerChoice choice) {
+    public static void sendResultMessage(Player player, Result result, PlayerChoice opponentChoice) {
         try {
             String message = Json.createObjectBuilder()
                     .add("type", Type.RESULT.toString())
                     .add("result", result.toString())
-                    .add("choice", choice.toString())
-                    .add("score", player.getScore()).build().toString();
+                    .add("opponentChoice", opponentChoice.toString())
+                    //.add("score", player.getScore())
+                    .build().toString();
 
             if (player.isActive())
                 player.getSender().sendText(message);
