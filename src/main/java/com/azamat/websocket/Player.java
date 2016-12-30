@@ -10,7 +10,7 @@ public class Player {
     private String id;
     private String nick;
     //выбор игрока (камень, ножныцы или бумага)
-    private String choice;
+    private PlayerChoice choice;
     //счет за несколько игр
     private Integer score = 0;
 
@@ -82,11 +82,11 @@ public class Player {
         this.nick = nick;
     }
 
-    public String getChoice() {
+    public PlayerChoice getChoice() {
         return choice;
     }
 
-    public void setChoice(String choice) {
+    public void setChoice(PlayerChoice choice) {
         this.choice = choice;
     }
 

@@ -14,15 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//// TODO: Решить где будет считаться score, в любом случае нужно сохранять в базу данных
-
 //Создается новый экземпляр класса при каждом соединении
 @ApplicationScoped
-@ServerEndpoint(
-        value = "/game/{room}"
-//        encoders = MessageEncoder.class,
-//        decoders = MessageDecoder.class
-)
+@ServerEndpoint(value = "/game/{room}")
 public class ServerEndPoint {
     //хранит игроков, которые ожидают подключения соперника
     private static final Map<String, Player> idlePlayers = new ConcurrentHashMap<>();
@@ -35,6 +29,7 @@ public class ServerEndPoint {
     @OnOpen
     public void onOpen(Session session, @PathParam("room") String roomId) {
         logger.log(Level.INFO, "поиск @OnOpen" + roomId);
+        session.setMaxIdleTimeout(300_000);
 
         try {
             //если только зашел на сайт и нет id, или если зашел под неизвестным uuid,
@@ -52,9 +47,9 @@ public class ServerEndPoint {
                 idlePlayers.get(roomId).setOpponent(player);
 
                 //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
-                PlayerHandler.sendConnectionMessage(player);
+                PlayerHandler.sendConnectionMessage(player, null);
                 if (player.isConnected())
-                    PlayerHandler.sendConnectionMessage(player.getOpponent());
+                    PlayerHandler.sendConnectionMessage(player.getOpponent(), null);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,11 +64,12 @@ public class ServerEndPoint {
             idlePlayers.put(roomId, player.getOpponent());
             //удаляет ссылку на себя у оппонента
             player.getOpponent().setOpponent(null);
+            PlayerHandler.sendConnectionMessage(player.getOpponent(), "Your opponent disconnected.");
         } else {
             idlePlayers.remove(roomId);
+            //PlayerHandler.sendConnectionMessage(player, "You were inactive for too long.");
         }
 
-        PlayerHandler.sendConnectionMessage(player.getOpponent());
     }
 
     @OnError
@@ -83,9 +79,6 @@ public class ServerEndPoint {
 
     @OnMessage
     public void onMessage(String message) {
-        logger.log(Level.SEVERE, "@OnMessage" + roomId);
-//        logger.log(Level.SEVERE, message.toString());
-
         try (JsonReader reader = Json.createReader(new StringReader(message))) {
             JsonObject jsonMessage = reader.readObject();
 
@@ -95,9 +88,8 @@ public class ServerEndPoint {
                     //PlayerHandler.sendChatMessage(player.getOpponent(), jsonMessage.getString("message"));
                     break;
                 case RESULT:
-                    player.setChoice(jsonMessage.getString("choice"));
+                    player.setChoice(PlayerChoice.valueOf(jsonMessage.getString("choice")));
 
-                    //// TODO: 12/28/16 Возможно, первая проверка лишняя
                     if (player.getChoice() != null & player.getOpponent().getChoice() != null)
                         play();
             }
@@ -105,27 +97,30 @@ public class ServerEndPoint {
     }
 
     private void play() {
-        PlayerChoice choice = PlayerChoice.valueOf(player.getChoice());
-        PlayerChoice opponentChoice = PlayerChoice.valueOf(player.getOpponent().getChoice());
-
-        if (choice == opponentChoice) {
-            PlayerHandler.sendResultMessage(player, Result.DRAW, opponentChoice);
-            PlayerHandler.sendResultMessage(player.getOpponent(), Result.DRAW, choice);
-
-            //// TODO: 12/6/16 Можно вынести в отдельный метод
-        } else if ((choice == PlayerChoice.ROCK & opponentChoice == PlayerChoice.SCISSORS) ||
-                (choice == PlayerChoice.PAPER & opponentChoice == PlayerChoice.ROCK) ||
-                (choice == PlayerChoice.SCISSORS & opponentChoice == PlayerChoice.PAPER)) {
-            player.incrementScore();
-            PlayerHandler.sendResultMessage(player, Result.WIN, opponentChoice);
-            PlayerHandler.sendResultMessage(player.getOpponent(), Result.LOSE, choice);
+        if (player.getChoice() == player.getOpponent().getChoice()) {
+            PlayerHandler.sendResultMessage(player, Result.DRAW, player.getChoice());
+            PlayerHandler.sendResultMessage(player.getOpponent(), Result.DRAW, player.getChoice());
         } else {
-            player.getOpponent().incrementScore();
-            PlayerHandler.sendResultMessage(player, Result.LOSE, opponentChoice);
-            PlayerHandler.sendResultMessage(player.getOpponent(), Result.WIN, choice);
+            Player winner = getWinner(player, player.getOpponent());
+
+            PlayerHandler.sendResultMessage(winner, Result.WIN, winner.getOpponent().getChoice());
+            PlayerHandler.sendResultMessage(winner.getOpponent(), Result.LOSE, winner.getChoice());
         }
 
         player.setChoice(null);
         player.getOpponent().setChoice(null);
+    }
+
+    private Player getWinner(Player player1, Player player2) {
+        PlayerChoice choiceP1 = player1.getChoice();
+        PlayerChoice choiceP2 = player2.getChoice();
+
+        if ((choiceP1 == PlayerChoice.ROCK & choiceP2 == PlayerChoice.SCISSORS) ||
+                (choiceP1 == PlayerChoice.PAPER & choiceP2 == PlayerChoice.ROCK) ||
+                (choiceP1 == PlayerChoice.SCISSORS & choiceP2 == PlayerChoice.PAPER)) {
+            return player1;
+        } else {
+            return player2;
+        }
     }
 }

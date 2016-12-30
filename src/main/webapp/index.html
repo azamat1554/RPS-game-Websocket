@@ -13,10 +13,10 @@
     <script async src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script async src="js/bootstrap.js"></script>
-    <script async src="js/websocket.js"></script>
+    <script async src="js/main.js"></script>
 </head>
 <body>
-<div class="center-block">
+<div class="vertical-center">
     <div class="container">
         <div class="page-header text-center">
             <h1>ROCK PAPER SCISSORS</h1>
@@ -30,46 +30,53 @@
         <div id="main-box" hidden>
             <div class="row text-center">
                 <div class="score">
-                    <div class="col-xs-4">Your</br><span id="your-score">0</span></div>
+                    <div class="col-xs-4">You</br><span id="your-score">0</span></div>
                     <div class="col-xs-4">SCORE</div>
                     <div class="col-xs-4">Opponent</br><span id="opp-score">0</span></div>
                 </div>
             </div>
 
-            <div class="row text-center" id="select-box">
-                <p>Click the picture</p>
-                <div class="col-xs-4">
-                    <button class="btn btn-default" style="float: right" data-choice="ROCK">
-                        <img src="images/rock.png" class="img-responsive" width="120">
-                    </button>
+            <div class="row text-center play-box" id="select-box">
+                <div class="header">
+                    <p>Click the picture</p>
+                    <p class="result-header"></p>
                 </div>
-                <div class="col-xs-4">
-                    <button class="btn btn-default" data-choice="PAPER">
-                        <img src="images/paper.png" class="img-responsive " width="120">
-                    </button>
+                <div class="col-xs-4 r">
+                    <img src="images/rock.png" class="img-responsive right icon" width="120" data-choice="ROCK">
                 </div>
-                <div class="col-xs-4">
-                    <!--<button class="btn btn-default" style="float: left" data-choice="SCISSORS">-->
-                        <img src="images/scissors.png" style="float: left" data-choice="SCISSORS" class="img-responsive" width="120">
-                    <!--</button>-->
+
+                <div class="col-xs-4 p">
+                    <img src="images/paper.png" class="img-responsive center-block icon" width="120"
+                         data-choice="PAPER">
+                </div>
+
+                <div class="col-xs-4 s">
+                    <img src="images/scissors.png" class="img-responsive left icon" width="120"
+                         data-choice="SCISSORS">
+                </div>
+
+                <div class="col-xs-4 p" style="font-size: 42px; line-height: 200px;"  hidden>
+                    VS
+                </div>
+
+                <div class="col-xs-4 s"  hidden>
+                    <img id="opp-choice-image" src="images/preloader.gif" class="img-responsive left" width="120">
                 </div>
             </div>
 
 
-            <div class="panel panel-default" style="margin-top: 50px">
+            <div class="panel panel-default" style="margin-top: 30px">
                 <div class="panel-heading">CHAT</div>
                 <div id="message-body" class="panel-body chat-panel"></div>
 
-                <!--<form id="message-form">-->
                 <div class="panel-footer">
                     <div class="input-group" id="chat-input">
-                        <input type="text" class="form-control" placeholder="Enter Message"/>
+                        <input type="text" class="form-control" placeholder="Enter Message" maxlength="300">
                         <span class="input-group-btn">
                             <button class="btn btn-success">SEND</button>
                         </span>
                     </div>
                 </div>
-                <!--</form>-->
             </div>
         </div>
     </div>

@@ -1,37 +1,29 @@
-//todo  нужно блокировать чат, пока соединение не установленно
-
 var socket;
 var chatInput;
 var urlInput;
-//var rock, paper, scissors;
+var currentChoice;
 
 window.onload = function init() {
-    //rock = document.getElementById('rock');
-    //paper = document.getElementById('paper');
-    //scissors = document.getElementById('scissors');
-    document.getElementById('chat-input').disabled = true;
-
     //инициализация
     urlInput = document.querySelector('#url');
     chatInput = document.querySelector('#chat-input > input');
 
     //установка обработчиков
-    urlInput.value = 'текст для тестирования виделения';
     urlInput.onfocus = function (event) {
         var r = document.createRange();
         r.selectNode(event.target);
         window.getSelection().addRange(r);
     };
+
     chatInput.onkeydown = function (event) {
         if (event.keyCode == 13) clickSend();
     };
 
-    document.querySelector('#select-box').onclick = clickBtn;
     document.querySelector('#chat-input > span').onclick = clickSend;
+    document.querySelector('#select-box').onclick = clickImage;
 
     var url = "ws://" + location.host + "/RPS_Game_1.0/game/" + location.hash.replace('#', '');
     socket = new WebSocket(url);
-    socket.onopen = onOpen;
     socket.onclose = onClose;
     socket.onerror = onError;
     socket.onmessage = onMessage;
@@ -41,13 +33,13 @@ window.onload = function init() {
 //            WebSocket methods
 //============================================
 
-function onOpen() {
-    console.log("Соединение установлено.");
-};
-
 function onClose(event) {
     if (event.wasClean) {
         console.log('Соединение закрыто чисто');
+
+        if (!document.getElementById('cover')) {
+            showCover('You were inactive for too long.');
+        }
     } else {
         console.log('Обрыв + соединения'); // например, "убит" процесс сервера
     }
@@ -69,7 +61,7 @@ function onMessage(event) {
             showResult(incomingMessage);
             break;
         case 'CONNECTION':
-            showConnection(incomingMessage.connection);
+            showConnection(incomingMessage);
             break;
         case 'ID':
             window.location.hash = incomingMessage.id;
@@ -80,8 +72,6 @@ function onMessage(event) {
 //===========================================
 //   Methods for handling messages
 //===========================================
-
-// показать сообщение в div#subscribe
 
 function showMessage(message, isYour) {
     var newMessageElem = document.createElement('div');
@@ -103,7 +93,7 @@ function sendMessage(message) {
         type: "MESSAGE",
         message: message
     };
-    //showMessage(object);
+
     try {
         socket.send(JSON.stringify(msgJObj));
     } catch (exp) {
@@ -112,14 +102,46 @@ function sendMessage(message) {
 }
 
 function showResult(resultObj) {
-    if (resultObj.result === 'WIN')
-        document.getElementById('your-score').textContent++;
-    else if (resultObj.result === "LOSE")
-        document.getElementById('opp-score').textContent++;
+    var header = document.querySelector('.result-header');
 
-    //var messageElem = document.createElement('div');
-    //messageElem.appendChild(document.createTextNode(JSON.stringify(message)));
-    //document.getElementById('subscribe').appendChild(messageElem);
+    header.textContent = resultObj.result;
+
+    header.hidden = false;
+    document.getElementById('opp-choice-image').src = 'images/' + resultObj.opponentChoice.toLowerCase() + '.png';
+
+    if (resultObj.result === 'WIN') {
+        document.getElementById('your-score').textContent++;
+    } else if (resultObj.result === "LOSE") {
+        document.getElementById('opp-score').textContent++;
+    }
+
+    setTimeout(restartGame, 2000);
+}
+
+function restartGame() {
+    var children = document.querySelector('#select-box').children;
+
+
+    toggleHidden(children, 1, 4);
+    children[0].firstElementChild.hidden = false;
+    children[0].lastElementChild.hidden = true;
+    currentChoice.parentNode.hidden = false;
+
+    currentChoice.parentNode.classList.toggle('icon-animate');
+    currentChoice.style.cssFloat = '';
+    currentChoice.parentNode.style.left = '';
+
+    currentChoice.classList.toggle('icon');
+    document.querySelector('#select-box').onclick = clickImage;
+
+    document.getElementById('opp-choice-image').src = 'images/preloader.gif';
+
+    toggleHidden(children, 4, children.length);
+}
+
+function toggleHidden(elements, start, end) {
+    for (var i = start; i < end; i++)
+        elements[i].hidden = !elements[i].hidden;
 }
 
 function sendResult(choice) {
@@ -131,8 +153,8 @@ function sendResult(choice) {
     socket.send(JSON.stringify(object));
 }
 
-function showConnection(connected) {
-    if (connected) {
+function showConnection(connectionObj) {
+    if (connectionObj.connection) {
         if (!document.getElementById('cover')) {
             document.getElementById('main-box').hidden = false;
             document.getElementById('url-box').hidden = true;
@@ -140,19 +162,13 @@ function showConnection(connected) {
             hideCover(); //если оппонент решил вернуться
         }
     } else {
-        showCover();
+        showCover(connectionObj.reason);
     }
 }
 
 //=========================================
 //   Methods for event handling
 //=========================================
-
-// chatInput.onkeydown = function (event) {
-//     if (event.keyCode == 13) clickSend();
-// };
-//
-// document.querySelector('#chat-input > span').onclick = clickSend;
 
 function clickSend() {
     var message = chatInput.value.trim();
@@ -165,16 +181,35 @@ function clickSend() {
     sendMessage(message);
 };
 
-function clickBtn(event) {
-    var choice;
-    var target = event.target
-    while (target.tagName !== 'BUTTON') {
-        if (this === target) return;
-        target = target.parentNode;
+
+function clickImage(event) {
+    var target = event.target;
+
+    //если кликнули не по img - выйти
+    if (!target.closest('img')) return;
+
+    currentChoice = target;
+
+    var children = document.querySelector('#select-box').children;
+
+    toggleHidden(children, 1, 4);
+    children[0].firstElementChild.hidden = true;
+    currentChoice.parentNode.hidden = false;
+
+    currentChoice.parentNode.classList.toggle('icon-animate');
+    currentChoice.parentNode.style.left = 0 + 'px';
+    currentChoice.style.cssFloat = 'right';
+
+    currentChoice.classList.toggle('icon');
+    document.querySelector('#select-box').onclick = null;
+
+    if (currentChoice.parentNode == children[1]) {
+        toggleHidden(children, 4, children.length);
+    } else {
+        setTimeout(toggleHidden, 500, children, 4, children.length);
     }
 
-    console.log(target.getAttribute('data-choice'));
-    sendResult(target.getAttribute('data-choice'));
+    setTimeout(sendResult, 500, target.getAttribute('data-choice'));
 };
 
 //==============================================
@@ -182,15 +217,14 @@ function clickBtn(event) {
 //==============================================
 
 // Показать полупрозрачный DIV, затеняющий всю страницу
-// (а форма будет не в нем, а рядом с ним, чтобы не полупрозрачная)
-function showCover() {
+function showCover(reason) {
     var cover = document.createElement('div');
     cover.id = 'cover';
     cover.classList.add('cover');
 
     var windowDiv = document.createElement('div');
     windowDiv.classList.add('window');
-    windowDiv.textContent = 'Your opponent disconnected.';
+    windowDiv.textContent = reason;
     cover.appendChild(windowDiv);
 
     document.body.appendChild(cover);

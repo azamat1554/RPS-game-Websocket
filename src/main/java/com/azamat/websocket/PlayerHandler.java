@@ -19,11 +19,13 @@ public final class PlayerHandler {
         }
     }
 
-    public static void sendConnectionMessage(Player player) {
+    public static void sendConnectionMessage(Player player, String reason) {
         try {
             String message = Json.createObjectBuilder()
                     .add("type", Type.CONNECTION.toString())
-                    .add("connection", player.isConnected()).build().toString();
+                    .add("connection", player.isConnected())
+                    .add("reason", String.valueOf(reason))
+                    .build().toString();
 
             if (player.isActive())
                 player.getSender().sendText(message);
@@ -50,12 +52,6 @@ public final class PlayerHandler {
 
     public static void sendChatMessage(Player player, String msg) {
         try {
-//            String message = Json.createObjectBuilder()
-//                    .add("type", Type.MESSAGE.toString())
-//                    //.add("nick", player.getNick())
-////                    .add("sendDate", player.getSendDate.toString())
-//                    .add("message", msg).build().toString();
-
             if (player.isActive())
                 player.getSender().sendText(msg);
         } catch (Exception e) {
