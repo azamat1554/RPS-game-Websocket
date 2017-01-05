@@ -1,7 +1,9 @@
 package com.azamat.websocket;
 
+import javax.websocket.CloseReason;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
+import java.io.IOException;
 
 /**
  * Created by azamat on 11/30/16.
@@ -44,6 +46,13 @@ public class Player {
         return score++;
     }
 
+    public void exit() {
+        try {
+            session.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     //==========================================
     //=            Getter & Setter             =

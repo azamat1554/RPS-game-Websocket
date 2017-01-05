@@ -19,12 +19,11 @@ public final class PlayerHandler {
         }
     }
 
-    public static void sendConnectionMessage(Player player, String reason) {
+    public static void sendConnectionMessage(Player player) {
         try {
             String message = Json.createObjectBuilder()
                     .add("type", Type.CONNECTION.toString())
                     .add("connection", player.isConnected())
-                    .add("reason", String.valueOf(reason))
                     .build().toString();
 
             if (player.isActive())
@@ -40,7 +39,6 @@ public final class PlayerHandler {
                     .add("type", Type.RESULT.toString())
                     .add("result", result.toString())
                     .add("opponentChoice", opponentChoice.toString())
-                    //.add("score", player.getScore())
                     .build().toString();
 
             if (player.isActive())

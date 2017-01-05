@@ -33,7 +33,9 @@ public class ServerEndPoint {
 
         try {
             //если только зашел на сайт и нет id, или если зашел под неизвестным uuid,
-            // тогда сгенерировать новый uuid и создать новую комнату
+            // тогда сгенерировать новый uuid
+
+            //второе условие нужно чтобы игнорировать третьего игрока
             if (!idlePlayers.containsKey(roomId) || idlePlayers.get(roomId).isConnected()) {
                 this.roomId = roomId = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
                 player = new Player(roomId, session);
@@ -47,9 +49,9 @@ public class ServerEndPoint {
                 idlePlayers.get(roomId).setOpponent(player);
 
                 //отвечать нужно обоим пользователям, чтобы они знали, что соединение установленно
-                PlayerHandler.sendConnectionMessage(player, null);
+                PlayerHandler.sendConnectionMessage(player);
                 if (player.isConnected())
-                    PlayerHandler.sendConnectionMessage(player.getOpponent(), null);
+                    PlayerHandler.sendConnectionMessage(player.getOpponent());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,15 +63,10 @@ public class ServerEndPoint {
         logger.log(Level.SEVERE, "@OnClose" + roomId);
 
         if (player.isConnected()) {
-            idlePlayers.put(roomId, player.getOpponent());
-            //удаляет ссылку на себя у оппонента
-            player.getOpponent().setOpponent(null);
-            PlayerHandler.sendConnectionMessage(player.getOpponent(), "Your opponent disconnected.");
+            player.getOpponent().exit();
         } else {
             idlePlayers.remove(roomId);
-            //PlayerHandler.sendConnectionMessage(player, "You were inactive for too long.");
         }
-
     }
 
     @OnError
@@ -85,7 +82,6 @@ public class ServerEndPoint {
             switch (Type.valueOf(jsonMessage.getString("type"))) {
                 case MESSAGE:
                     PlayerHandler.sendChatMessage(player.getOpponent(), message);
-                    //PlayerHandler.sendChatMessage(player.getOpponent(), jsonMessage.getString("message"));
                     break;
                 case RESULT:
                     player.setChoice(PlayerChoice.valueOf(jsonMessage.getString("choice")));

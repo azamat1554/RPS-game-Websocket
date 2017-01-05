@@ -22,7 +22,7 @@ window.onload = function init() {
     document.querySelector('#chat-input > span').onclick = clickSend;
     document.querySelector('#select-box').onclick = clickImage;
 
-    var url = "ws://" + location.host + "/RPS_Game_1.0/game/" + location.hash.replace('#', '');
+    var url = "wss://" + location.host + location.pathname + "game/" + location.hash.replace('#', '');
     socket = new WebSocket(url);
     socket.onclose = onClose;
     socket.onerror = onError;
@@ -36,14 +36,16 @@ window.onload = function init() {
 function onClose(event) {
     if (event.wasClean) {
         console.log('Соединение закрыто чисто');
-
-        if (!document.getElementById('cover')) {
-            showCover('You were inactive for too long.');
-        }
     } else {
-        console.log('Обрыв + соединения'); // например, "убит" процесс сервера
+        console.log('Обрыв соединения'); // например, "убит" процесс сервера
     }
     console.log('Код: ' + event.code + ' причина: ' + event.reason);
+
+    if (event.reason) {
+        showCover('You were inactive for too long.');
+    } else {
+        showCover('Your opponent disconnected.');
+    }
 }
 
 function onError(error) {
@@ -61,7 +63,7 @@ function onMessage(event) {
             showResult(incomingMessage);
             break;
         case 'CONNECTION':
-            showConnection(incomingMessage);
+            showConnection(incomingMessage.connection);
             break;
         case 'ID':
             window.location.hash = incomingMessage.id;
@@ -153,16 +155,12 @@ function sendResult(choice) {
     socket.send(JSON.stringify(object));
 }
 
-function showConnection(connectionObj) {
-    if (connectionObj.connection) {
+function showConnection(connection) {
+    if (connection) {
         if (!document.getElementById('cover')) {
             document.getElementById('main-box').hidden = false;
             document.getElementById('url-box').hidden = true;
-        } else {
-            hideCover(); //если оппонент решил вернуться
         }
-    } else {
-        showCover(connectionObj.reason);
     }
 }
 
@@ -185,8 +183,11 @@ function clickSend() {
 function clickImage(event) {
     var target = event.target;
 
-    //если кликнули не по img - выйти
-    if (!target.closest('img')) return;
+    var currentTarger = target;
+    while (currentTarger.tagName !== 'IMG') {
+        if (currentTarger == this) return;
+        currentTarger = currentTarger.parentNode;
+    }
 
     currentChoice = target;
 
@@ -228,8 +229,4 @@ function showCover(reason) {
     cover.appendChild(windowDiv);
 
     document.body.appendChild(cover);
-}
-
-function hideCover() {
-    document.body.removeChild(document.getElementById('cover'));
 }
